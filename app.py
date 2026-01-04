@@ -9,7 +9,6 @@ from flask import redirect, url_for
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
 import smtplib
 from email.mime.text import MIMEText
 import os
@@ -27,7 +26,8 @@ otp_store = {}
 @app.teardown_appcontext
 def teardown_db(exception):
     close_db(exception)
-from flask import render_template, redirect, session
+
+
 
 @app.route("/")
 def index():
