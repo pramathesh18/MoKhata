@@ -33,7 +33,7 @@ If you did not request this, please ignore this email.
     msg["To"] = to_email
 
     try:
-        server = smtplib.SMTP(HOST, PORT)
+        server = smtplib.SMTP(HOST, PORT, timeout=10)
         server.starttls()
         server.login(USERNAME, PASSWORD)
         server.sendmail(EMAIL_FROM, to_email, msg.as_string())
