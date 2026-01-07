@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MoKhata</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="header">
+    <h2>Customers</h2>
+
+    <div id="owner-info"></div>
+
+    <a href="/owner/logout" class="logout">Logout</a>
+  </header>
+
+  <!-- ===== Cards / History Container ===== -->
+  <main id="cards" class="grid"></main>
+
+  <!-- ===== Floating Add Customer Button ===== -->
+  <button id="fab" onclick="openAddCustomer()">+</button>
+
+  <!-- ===== Modal ===== -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modal-title"></h3>
+
+      <!-- Transaction Fields -->
+      <div id="txn-fields">
+        <input id="amount" type="number" placeholder="Amount">
+        <input id="note" placeholder="Note (optional)">
+      </div>
+
+      <!-- Add Customer Fields -->
+      <div id="customer-fields" class="hidden">
+        <input id="cust-name" placeholder="Customer Name">
+        <input id="cust-pass" placeholder="Customer Password">
+      </div>
+
+      <button id="confirm">Confirm</button>
+      <button type="button" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
