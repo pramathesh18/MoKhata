@@ -2,8 +2,10 @@
 
 import os
 import smtplib
+import ssl
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -18,8 +20,7 @@ def send_otp_email(to_email: str, otp: int) -> bool:
         raise RuntimeError("Email environment variables not fully set")
 
     subject = "MoKhata Login OTP"
-    body = f"""
-Your OTP for MoKhata login is:
+    body = f"""Your OTP for MoKhata login is:
 
 {otp}
 
@@ -33,12 +34,19 @@ If you did not request this, please ignore this email.
     msg["To"] = to_email
 
     try:
+        context = ssl.create_default_context()
+
         server = smtplib.SMTP(HOST, PORT, timeout=10)
-        server.starttls()
+        server.ehlo()
+        server.starttls(context=context)
+        server.ehlo()
+
         server.login(USERNAME, PASSWORD)
         server.sendmail(EMAIL_FROM, to_email, msg.as_string())
         server.quit()
+
         return True
+
     except Exception as e:
         print("OTP email error:", e)
         return False
