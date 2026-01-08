@@ -79,7 +79,8 @@ def owner_login():
     if not sent:
         print(f"[OTP-EMAIL-FAILED] {email}")
 
-    print(f"[OTP] {email}: {otp}")
+    print(f"\n\n===== OTP DEBUG =====\nEMAIL: {email}\nOTP: {otp}\n=====================\n")
+
 
     session.clear()
     session["pending_owner_email"] = email
@@ -101,14 +102,13 @@ def owner_verify():
     if not otp:
         abort(400)
 
+    email = session.get("pending_owner_email")
+    if not email:
+        abort(401)
+
     now = datetime.now(timezone.utc)
 
     with engine.begin() as conn:
-        
-        email = session.get("pending_owner_email")
-        if not email:
-            abort(401)
-
         row = conn.execute(
             select(
                 login_otps.c.otp_hash,
@@ -120,18 +120,18 @@ def owner_verify():
             )
         ).fetchone()
 
-        if row is None:
-            abort(401)
-
-        if not check_password_hash(row.otp_hash, otp):
+        if row is None or not check_password_hash(row.otp_hash, otp):
             abort(401)
 
         owner = conn.execute(
-            select(owners.c.id).where(owners.c.email == row.email)
+            select(owners.c.id).where(owners.c.email == email)
         ).fetchone()
 
+        if owner is None:
+            abort(401)
+
         conn.execute(
-            delete(login_otps).where(login_otps.c.email == row.email)
+            delete(login_otps).where(login_otps.c.email == email)
         )
 
     session.clear()
