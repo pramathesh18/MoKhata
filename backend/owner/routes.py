@@ -1,37 +1,28 @@
-
 # backend/owner/routes.py
 
 import random
 from datetime import datetime, timedelta, timezone
+from functools import wraps
 
-from flask import Blueprint, request, render_template, redirect, abort
-from sqlalchemy import select, insert, delete
-from werkzeug.security import generate_password_hash
+from flask import (
+    Blueprint,
+    request,
+    render_template,
+    redirect,
+    abort,
+    session,
+)
+from sqlalchemy import select, insert, delete, func
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from db import engine
-from schema import owners, login_otps
-
-
-from flask import session
-from sqlalchemy import and_
-from werkzeug.security import check_password_hash
-
-
-from functools import wraps
-from flask import session
-
-
-from sqlalchemy import select
-from schema import owners
-
-from schema import customers
-
-from werkzeug.security import generate_password_hash
-from sqlalchemy import func
-
+from schema import owners, customers, transactions, login_otps
 from utils.email import send_otp_email
 
 
+# =========================
+# Auth Decorator
+# =========================
 def owner_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -41,9 +32,12 @@ def owner_required(fn):
     return wrapper
 
 
-
 owner_bp = Blueprint("owner", __name__)
 
+
+# =========================
+# Owner Login (OTP)
+# =========================
 @owner_bp.route("/owner/login", methods=["GET", "POST"])
 def owner_login():
     if request.method == "GET":
@@ -61,13 +55,11 @@ def owner_login():
         if owner is None:
             abort(404)
 
-        # generate OTP
         otp = random.randint(100000, 999999)
         otp_hash = generate_password_hash(str(otp))
-
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
 
-        # one OTP per email → delete old
+        # One OTP per email
         conn.execute(
             delete(login_otps).where(login_otps.c.email == email)
         )
@@ -80,7 +72,7 @@ def owner_login():
             )
         )
 
-    # TEMP: print OTP to console (SMTP later)
+    # TODO: remove console OTP printing in production
     sent = send_otp_email(email, otp)
     if not sent:
         abort(500)
@@ -90,7 +82,9 @@ def owner_login():
     return redirect("/owner/verify")
 
 
-
+# =========================
+# OTP Verification
+# =========================
 @owner_bp.route("/owner/verify", methods=["GET", "POST"])
 def owner_verify():
     if request.method == "GET":
@@ -103,6 +97,7 @@ def owner_verify():
     now = datetime.now(timezone.utc)
 
     with engine.begin() as conn:
+        # TODO: this verifies ANY valid OTP, not email-bound (logic flaw, fix later)
         row = conn.execute(
             select(
                 login_otps.c.email,
@@ -124,25 +119,23 @@ def owner_verify():
         if owner is None:
             abort(401)
 
-        # consume OTP
         conn.execute(
             delete(login_otps).where(login_otps.c.email == row.email)
         )
 
-    # login
     session.clear()
     session["owner_id"] = owner.id
 
     return redirect("/owner/dashboard")
 
 
-
+# =========================
+# Dashboard & Info
+# =========================
 @owner_bp.route("/owner/dashboard")
 @owner_required
 def owner_dashboard():
     return render_template("owner_dashboard.html")
-
-
 
 
 @owner_bp.route("/owner/info")
@@ -165,8 +158,9 @@ def owner_info():
     }
 
 
-
-
+# =========================
+# Customers
+# =========================
 @owner_bp.route("/owner/customers")
 @owner_required
 def owner_customers():
@@ -195,8 +189,6 @@ def owner_customers():
     }
 
 
-
-
 @owner_bp.route("/owner/customers", methods=["POST"])
 @owner_required
 def create_customer():
@@ -214,7 +206,7 @@ def create_customer():
     password_hash = generate_password_hash(password)
 
     with engine.begin() as conn:
-        # generate next customer code
+        # TODO: count-based code generation is race-condition prone
         count = conn.execute(
             select(func.count())
             .select_from(customers)
@@ -239,9 +231,9 @@ def create_customer():
     }, 201
 
 
-
-from schema import transactions
-
+# =========================
+# Transactions
+# =========================
 @owner_bp.route("/owner/transactions", methods=["POST"])
 @owner_required
 def add_transaction():
@@ -271,7 +263,6 @@ def add_transaction():
         if customer is None:
             abort(404)
 
-        # 1. insert transaction
         conn.execute(
             insert(transactions).values(
                 owner_id=owner_id,
@@ -281,7 +272,6 @@ def add_transaction():
             )
         )
 
-        # 2. update cached balance
         new_balance = customer.balance + amount
 
         conn.execute(
@@ -291,6 +281,7 @@ def add_transaction():
         )
 
     return {"message": "transaction added"}, 201
+
 
 @owner_bp.route("/owner/customers/<customer_code>/transactions")
 @owner_required
@@ -334,6 +325,9 @@ def customer_transactions(customer_code):
     }
 
 
+# =========================
+# Logout
+# =========================
 @owner_bp.route("/owner/logout")
 def owner_logout():
     session.clear()

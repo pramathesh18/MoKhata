@@ -1,31 +1,47 @@
 # backend/admin/routes.py
 
 import os
-from flask import Blueprint, request, abort, render_template_string
+
+from flask import (
+    Blueprint,
+    request,
+    abort,
+    render_template_string,
+)
 from sqlalchemy.exc import IntegrityError
 
 from db import get_conn
 from schema import owners
 
+
+# =========================
+# Config
+# =========================
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 if not ADMIN_PASSWORD:
     raise RuntimeError("ADMIN_PASSWORD not set")
 
+
 admin_bp = Blueprint("admin", __name__, url_prefix="/__admin__")
 
 
-# -------------------------
+# =========================
 # Helpers
-# -------------------------
+# =========================
 def require_admin_password():
+    """
+    Simple admin gate.
+    Intentionally returns 404 on failure to avoid endpoint discovery.
+    """
     pw = request.form.get("password") or request.args.get("password")
     if pw != ADMIN_PASSWORD:
         abort(404)
 
 
-# -------------------------
+# =========================
 # Inline HTML (intentional)
-# -------------------------
+# Admin panel is intentionally minimal and template-less
+# =========================
 LOGIN_HTML = """
 <h2>Admin Login</h2>
 <form method="post">
@@ -56,9 +72,9 @@ CREATE_OWNER_HTML = """
 """
 
 
-# -------------------------
+# =========================
 # Routes
-# -------------------------
+# =========================
 @admin_bp.route("/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":

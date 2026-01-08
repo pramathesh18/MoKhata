@@ -1,23 +1,25 @@
 # backend/customer/routes.py
 
-from flask import Blueprint, request, render_template, redirect, session, abort
-from sqlalchemy import select
-from werkzeug.security import check_password_hash
-
-from db import engine
-from schema import owners, customers
-
 from functools import wraps
 
-from flask import Blueprint, request, render_template, redirect, session, abort
+from flask import (
+    Blueprint,
+    request,
+    render_template,
+    redirect,
+    session,
+    abort,
+)
+from sqlalchemy import select
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from schema import transactions
+from db import engine
+from schema import owners, customers, transactions
 
 
-
-from werkzeug.security import generate_password_hash
-
-
+# =========================
+# Auth Decorator
+# =========================
 def customer_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -27,9 +29,12 @@ def customer_required(fn):
     return wrapper
 
 
-
 customer_bp = Blueprint("customer", __name__)
 
+
+# =========================
+# Login
+# =========================
 @customer_bp.route("/customer/login", methods=["GET", "POST"])
 def customer_login():
     if request.method == "GET":
@@ -69,15 +74,18 @@ def customer_login():
     return redirect("/customer/dashboard")
 
 
+# =========================
+# Dashboard
+# =========================
 @customer_bp.route("/customer/dashboard")
 @customer_required
 def customer_dashboard():
     return render_template("customer_dashboard.html")
 
 
-
-
-
+# =========================
+# Customer Data API
+# =========================
 @customer_bp.route("/customer/data")
 @customer_required
 def customer_data():
@@ -129,7 +137,9 @@ def customer_data():
     }
 
 
-
+# =========================
+# Change Password
+# =========================
 @customer_bp.route("/customer/change-password", methods=["POST"])
 @customer_required
 def customer_change_password():
@@ -169,6 +179,9 @@ def customer_change_password():
     return "Password updated successfully"
 
 
+# =========================
+# Logout
+# =========================
 @customer_bp.route("/customer/logout")
 def customer_logout():
     session.clear()
