@@ -13,6 +13,10 @@ from sqlalchemy.exc import IntegrityError
 from db import get_conn
 from schema import owners
 
+from schema import login_otps
+from sqlalchemy import select
+from datetime import datetime, timezone
+
 
 # =========================
 # Config
@@ -109,3 +113,30 @@ def create_owner():
         msg = "Database error"
 
     return render_template_string(CREATE_OWNER_HTML, msg=msg)
+
+@admin_bp.route("/otps", methods=["GET", "POST"])
+def view_otps():
+    require_admin_password()
+
+    now = datetime.now(timezone.utc)
+
+    with get_conn() as conn:
+        rows = conn.execute(
+            select(
+                login_otps.c.email,
+                login_otps.c.expires_at,
+            )
+            .where(login_otps.c.expires_at > now)
+        ).fetchall()
+
+    html = """
+    <h2>Active OTPs</h2>
+    <p>(Check server logs for actual OTP values)</p>
+    <ul>
+      {% for r in rows %}
+        <li>{{ r.email }} — expires {{ r.expires_at }}</li>
+      {% endfor %}
+    </ul>
+    """
+
+    return render_template_string(html, rows=rows)

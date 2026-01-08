@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from admin.routes import admin_bp
 from owner.routes import owner_bp
 from customer.routes import customer_bp
+from flask import render_template
 
 
 # Load environment variables
@@ -38,6 +39,11 @@ def create_app():
     @app.route("/health")
     def health():
         return "OK", 200
+    
+    @app.route("/")
+    def index():
+        return render_template("index.html")
+
 
     return app
 

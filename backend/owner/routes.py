@@ -74,10 +74,17 @@ def owner_login():
 
     # TODO: remove console OTP printing in production
     sent = send_otp_email(email, otp)
+
+    # Never block login due to email failure
     if not sent:
-        abort(500)
+        print(f"[OTP-EMAIL-FAILED] {email}")
 
     print(f"[OTP] {email}: {otp}")
+
+    session.clear()
+    session["pending_owner_email"] = email
+
+
 
     return redirect("/owner/verify")
 
@@ -97,13 +104,20 @@ def owner_verify():
     now = datetime.now(timezone.utc)
 
     with engine.begin() as conn:
-        # TODO: this verifies ANY valid OTP, not email-bound (logic flaw, fix later)
+        
+        email = session.get("pending_owner_email")
+        if not email:
+            abort(401)
+
         row = conn.execute(
             select(
-                login_otps.c.email,
                 login_otps.c.otp_hash,
                 login_otps.c.expires_at,
-            ).where(login_otps.c.expires_at > now)
+            )
+            .where(
+                login_otps.c.email == email,
+                login_otps.c.expires_at > now,
+            )
         ).fetchone()
 
         if row is None:
@@ -115,9 +129,6 @@ def owner_verify():
         owner = conn.execute(
             select(owners.c.id).where(owners.c.email == row.email)
         ).fetchone()
-
-        if owner is None:
-            abort(401)
 
         conn.execute(
             delete(login_otps).where(login_otps.c.email == row.email)

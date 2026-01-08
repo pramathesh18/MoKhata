@@ -17,11 +17,21 @@ EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_FROM = os.getenv("EMAIL_FROM")
 
-if not all([EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, EMAIL_PASSWORD, EMAIL_FROM]):
-    raise RuntimeError("Email environment variables not fully set")
+EMAIL_ENABLED = all([
+    EMAIL_HOST,
+    EMAIL_PORT,
+    EMAIL_USERNAME,
+    EMAIL_PASSWORD,
+    EMAIL_FROM,
+])
+
 
 
 def send_otp_email(to_email: str, otp: int) -> bool:
+    if not EMAIL_ENABLED:
+        print("[EMAIL DISABLED] OTP not sent")
+        return False
+
     """
     Send OTP email for owner login.
     Returns True on success, False on failure.
