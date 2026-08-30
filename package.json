@@ -1,0 +1,25 @@
+{
+  "name": "mokhata",
+  "version": "1.0.0",
+  "description": "MoKhata - Secure Multi-Tenant Credit Ledger Application",
+  "main": "server/dist/server.js",
+  "scripts": {
+    "postinstall": "npm run prisma:generate --prefix server",
+    "build:server": "npm run build --prefix server",
+    "build:client": "npm run build --prefix client",
+    "build": "npm run build:server && npm run build:client",
+    "start": "node server/dist/server.js",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  },
+  "keywords": [
+    "credit-ledger",
+    "multi-tenant",
+    "express",
+    "prisma",
+    "react",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC"
+}

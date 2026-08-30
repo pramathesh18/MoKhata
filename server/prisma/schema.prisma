@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SHOP_OWNER
+  CUSTOMER
+}
+
+enum TransactionType {
+  CREDIT  // Customer receives goods without paying immediately -> balance increases
+  PAYMENT // Customer pays money -> balance decreases
+}
+
+model User {
+  id           String      @id @default(cuid())
+  userId       String      @unique // Auth User ID (e.g. admin, owner username, or generated customer ID)
+  passwordHash String
+  role         Role
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  shopOwner    ShopOwner?
+  customer     Customer?
+
+  @@index([userId])
+}
+
+model ShopOwner {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopName  String     @default("My Shop")
+  customers Customer[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  shopOwnerId  String
+  shopOwner    ShopOwner     @relation(fields: [shopOwnerId], references: [id], onDelete: Cascade)
+  userId       String        @unique
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  balance      Int           @default(0) // Integer monetary unit in Paise (e.g., ₹100.50 = 10050)
+  isActive     Boolean       @default(true) // Soft deletion to preserve ledger integrity
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+
+  @@index([shopOwnerId])
+  @@index([userId])
+}
+
+model Transaction {
+  id         String          @id @default(cuid())
+  customerId String
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type       TransactionType
+  amount     Int             // Positive monetary value in Paise
+  itemName   String?         // Optional item description/note
+  createdAt  DateTime        @default(now())
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
