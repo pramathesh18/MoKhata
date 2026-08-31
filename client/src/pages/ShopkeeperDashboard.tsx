@@ -19,6 +19,15 @@ export const ShopkeeperDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
 
+  // Synchronize dark theme class directly onto body element so entire background stays dark on mobile/overflows
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }, [darkMode]);
+
   // Data states
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
