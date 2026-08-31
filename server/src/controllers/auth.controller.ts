@@ -159,6 +159,22 @@ export const getMe = async (req: Request, res: Response, next: NextFunction): Pr
     }
 
     const sessionUser = req.session.user;
+
+    // Virtual admin session bypasses DB lookups
+    if (sessionUser.role === 'ADMIN' && sessionUser.id === 'admin') {
+      res.status(200).json({
+        success: true,
+        data: {
+          user: {
+            id: 'admin',
+            userId: 'admin',
+            role: 'ADMIN',
+          },
+        },
+      });
+      return;
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: sessionUser.id },
       include: {
@@ -210,14 +226,14 @@ export const getMe = async (req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
-    if (user.role === 'ADMIN') {
+    if (user.role === 'ADMIN' || sessionUser.role === 'ADMIN') {
       res.status(200).json({
         success: true,
         data: {
           user: {
-            id: user.id,
-            userId: user.userId,
-            role: user.role,
+            id: 'admin',
+            userId: 'admin',
+            role: 'ADMIN',
           },
         },
       });
