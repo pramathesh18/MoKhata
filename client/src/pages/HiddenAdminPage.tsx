@@ -20,6 +20,12 @@ export const HiddenAdminPage: React.FC = () => {
   const [resetPasswordVal, setResetPasswordVal] = useState('');
   const [resetMsg, setResetMsg] = useState('');
 
+  React.useEffect(() => {
+    if (user && user.role === 'ADMIN') {
+      fetchOwners();
+    }
+  }, [user]);
+
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIs404(false);
@@ -40,7 +46,7 @@ export const HiddenAdminPage: React.FC = () => {
         setOwners(res.data.owners);
       }
     } catch (err: any) {
-      setIs404(true);
+      console.error('Failed to fetch owners:', err);
     } finally {
       setLoadingOwners(false);
     }
