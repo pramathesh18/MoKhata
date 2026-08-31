@@ -8,6 +8,18 @@ export const HiddenAdminPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Admin Dashboard State
+  const [owners, setOwners] = useState<any[]>([]);
+  const [loadingOwners, setLoadingOwners] = useState(false);
+  const [newUserId, setNewUserId] = useState('');
+  const [newOwnerPassword, setNewOwnerPassword] = useState('');
+  const [newShopName, setNewShopName] = useState('');
+  const [createMsg, setCreateMsg] = useState('');
+
+  const [resetOwnerId, setResetOwnerId] = useState('');
+  const [resetPasswordVal, setResetPasswordVal] = useState('');
+  const [resetMsg, setResetMsg] = useState('');
+
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -27,7 +39,7 @@ export const HiddenAdminPage: React.FC = () => {
         setOwners(res.data.owners);
       }
     } catch (err: any) {
-      setIs404(true);
+      setErrorMsg(err.message || 'Failed to fetch owners');
     } finally {
       setLoadingOwners(false);
     }
@@ -184,7 +196,7 @@ export const HiddenAdminPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {owners.map((owner) => (
+                  {owners.map((owner: any) => (
                     <tr key={owner.id}>
                       <td><strong>{owner.userId}</strong></td>
                       <td>{owner.shopName}</td>
