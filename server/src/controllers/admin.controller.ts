@@ -9,10 +9,9 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     const { password } = req.body;
 
     if (!password || typeof password !== 'string') {
-      // Security requirement: Return 404 Not Found on failed authentication
-      res.status(404).json({
+      res.status(400).json({
         success: false,
-        error: { message: 'Resource not found' },
+        error: { message: 'Password is required' },
       });
       return;
     }
@@ -30,10 +29,9 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
     }
 
     if (!isValid) {
-      // Intentionally return 404 on invalid password to hide admin route
-      res.status(404).json({
+      res.status(401).json({
         success: false,
-        error: { message: 'Resource not found' },
+        error: { message: 'Invalid admin password' },
       });
       return;
     }
