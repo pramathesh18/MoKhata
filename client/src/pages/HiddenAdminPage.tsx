@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../api/client';
+import { formatTimestamp } from '../utils/dateFormatter';
 import { Shield, Key, Plus, Lock, LogOut } from 'lucide-react';
 
 export const HiddenAdminPage: React.FC = () => {
@@ -210,7 +211,7 @@ export const HiddenAdminPage: React.FC = () => {
                     <tr key={owner.id}>
                       <td><strong>{owner.userId}</strong></td>
                       <td>{owner.shopName}</td>
-                      <td>{new Date(owner.createdAt).toLocaleDateString()}</td>
+                      <td>{formatTimestamp(owner.createdAt)}</td>
                       <td>
                         <button
                           onClick={() => setResetOwnerId(owner.id)}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../api/client';
+import { formatTimestamp } from '../utils/dateFormatter';
 import {
   Plus,
   Minus,
@@ -459,7 +460,7 @@ export const ShopkeeperDashboard: React.FC = () => {
                           {tx.type === 'CREDIT' ? '+ CREDIT' : '- PAYMENT'}
                         </span>
                         {tx.itemName && <span className="tx-item-name">{tx.itemName}</span>}
-                        <span className="tx-date">{new Date(tx.createdAt).toLocaleDateString()}</span>
+                        <span className="tx-date">{formatTimestamp(tx.createdAt)}</span>
                       </div>
                       <div className={`tx-amount ${tx.type === 'CREDIT' ? 'text-danger' : 'text-success'}`}>
                         ₹{tx.amountInRupees}

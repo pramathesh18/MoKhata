@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../api/client';
+import { formatTimestamp } from '../utils/dateFormatter';
 import { UserCheck, Store, LogOut, Key, History } from 'lucide-react';
 
 export const CustomerPortalPage: React.FC = () => {
@@ -119,7 +120,7 @@ export const CustomerPortalPage: React.FC = () => {
                       {tx.type === 'CREDIT' ? '+ CREDIT' : '- PAYMENT'}
                     </span>
                     {tx.itemName && <span className="tx-item-name">{tx.itemName}</span>}
-                    <span className="tx-date">{new Date(tx.createdAt).toLocaleString()}</span>
+                    <span className="tx-date">{formatTimestamp(tx.createdAt)}</span>
                   </div>
                   <div className={`tx-amount ${tx.type === 'CREDIT' ? 'text-danger' : 'text-success'}`}>
                     ₹{tx.amountInRupees.toFixed(2)}
