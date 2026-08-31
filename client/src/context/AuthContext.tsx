@@ -8,6 +8,7 @@ export interface AuthUser {
   shopOwnerId?: string;
   customerId?: string;
   shopName?: string;
+  name?: string;
 }
 
 interface AuthContextType {
@@ -22,21 +23,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const getSavedUser = (): AuthUser | null => {
+  try {
+    const saved = localStorage.getItem('mokhata_user');
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(getSavedUser);
   const [loading, setLoading] = useState<boolean>(true);
 
   const checkAuth = async () => {
     try {
-      setLoading(true);
       const res = await apiRequest('/auth/me');
       if (res.success && res.data?.user) {
         setUser(res.data.user);
+        localStorage.setItem('mokhata_user', JSON.stringify(res.data.user));
       } else {
         setUser(null);
+        localStorage.removeItem('mokhata_user');
       }
     } catch (error) {
-      setUser(null);
+      // Network lag/server restart: retain local session so refresh doesn't prematurely log out user
     } finally {
       setLoading(false);
     }
@@ -53,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     if (res.success && res.data?.user) {
       setUser(res.data.user);
+      localStorage.setItem('mokhata_user', JSON.stringify(res.data.user));
     }
   };
 
@@ -63,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     if (res.success && res.data?.user) {
       setUser(res.data.user);
+      localStorage.setItem('mokhata_user', JSON.stringify(res.data.user));
     }
   };
 
@@ -72,11 +85,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       body: JSON.stringify({ password }),
     });
     if (res.success) {
-      setUser({
+      const adminUser: AuthUser = {
         id: 'admin',
         userId: 'admin',
         role: 'ADMIN',
-      });
+      };
+      setUser(adminUser);
+      localStorage.setItem('mokhata_user', JSON.stringify(adminUser));
     }
   };
 
@@ -91,6 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Ignore logout API error if session already expired
     } finally {
       setUser(null);
+      localStorage.removeItem('mokhata_user');
     }
   };
 
