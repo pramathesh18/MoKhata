@@ -29,6 +29,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Lightweight health check endpoint for external ping services (UptimeRobot, cron jobs)
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Trust reverse proxy (required for Render / HTTPS cookies behind reverse proxy)
 if (env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
