@@ -6,7 +6,7 @@ import { Shield, Key, Plus, Lock, LogOut } from 'lucide-react';
 export const HiddenAdminPage: React.FC = () => {
   const { user, loginAdmin, logout } = useAuth();
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [is404, setIs404] = useState(false);
 
   // Admin Dashboard State
   const [owners, setOwners] = useState<any[]>([]);
@@ -22,12 +22,13 @@ export const HiddenAdminPage: React.FC = () => {
 
   const handleAdminLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg('');
+    setIs404(false);
     try {
       await loginAdmin(password);
       fetchOwners();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Invalid Master Password');
+      // 404 behavior requirement for failed admin login
+      setIs404(true);
     }
   };
 
@@ -39,7 +40,7 @@ export const HiddenAdminPage: React.FC = () => {
         setOwners(res.data.owners);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to fetch owners');
+      setIs404(true);
     } finally {
       setLoadingOwners(false);
     }
@@ -87,6 +88,15 @@ export const HiddenAdminPage: React.FC = () => {
     }
   };
 
+  if (is404) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
+        <h1 style={{ fontSize: '4rem', margin: 0, color: '#374151' }}>404</h1>
+        <p style={{ color: '#6b7280', fontSize: '1.2rem' }}>Page Not Found</p>
+      </div>
+    );
+  }
+
   if (!user || user.role !== 'ADMIN') {
     return (
       <div className="login-container">
@@ -98,12 +108,6 @@ export const HiddenAdminPage: React.FC = () => {
             <h1 className="app-title">Admin Access</h1>
             <p className="app-subtitle">Protected System Console</p>
           </div>
-
-          {errorMsg && (
-            <div className="error-banner" style={{ backgroundColor: '#fee2e2', color: '#991b1b', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
-              ❌ {errorMsg}
-            </div>
-          )}
 
           <form onSubmit={handleAdminLogin} className="login-form">
             <div className="form-group">

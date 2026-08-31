@@ -8,36 +8,21 @@ export const adminLogin = async (req: Request, res: Response, next: NextFunction
   try {
     const { password } = req.body;
 
-    if (!password || typeof password !== 'string') {
-      res.status(400).json({
+    if (!password || typeof password !== 'string' || !env.ADMIN_PASSWORD_HASH) {
+      // Security requirement: Return 404 Not Found on failed authentication to conceal route
+      res.status(404).json({
         success: false,
-        error: { message: 'Password is required' },
+        error: { message: 'Resource not found' },
       });
       return;
     }
 
-    // Check plain text ADMIN_PASSWORD or ADMIN_PASSWORD_HASH first, then argon2
-    let isValid = false;
-    if (
-      (env.ADMIN_PASSWORD && password.trim() === env.ADMIN_PASSWORD.trim()) ||
-      (env.ADMIN_PASSWORD_HASH && password.trim() === env.ADMIN_PASSWORD_HASH.trim()) ||
-      password.trim() === '1810' ||
-      password.trim() === 'adminsecret123'
-    ) {
-      isValid = true;
-    } else if (env.ADMIN_PASSWORD_HASH) {
-      try {
-        isValid = await verifyPassword(password, env.ADMIN_PASSWORD_HASH);
-      } catch (err) {
-        console.error('Argon2 verify error:', err);
-        isValid = false;
-      }
-    }
-
+    const isValid = await verifyPassword(password, env.ADMIN_PASSWORD_HASH);
     if (!isValid) {
-      res.status(401).json({
+      // Intentionally return 404 on invalid password to hide admin route
+      res.status(404).json({
         success: false,
-        error: { message: 'Invalid admin password' },
+        error: { message: 'Resource not found' },
       });
       return;
     }
