@@ -9,5 +9,6 @@ export const env = {
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   DATABASE_URL: process.env.DATABASE_URL || '',
   SESSION_SECRET: process.env.SESSION_SECRET || 'fallback-secret-key',
-  ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || '',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'adminsecret123',
+  ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || '$argon2id$v=19$m=65536,p=4,t=3$zDtklYguVLz63XuuqUdFdg$HY0OwZDVm+xxQ7BKrURt95ld9H/JXEaJc1F7NX9zvdU',
 };
